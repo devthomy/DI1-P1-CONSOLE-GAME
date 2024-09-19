@@ -266,6 +266,7 @@ public class CurrentGameMainView : CurrentGameView
         dataTable.Columns.Add("Name");
         dataTable.Columns.Add("Company");
         dataTable.Columns.Add("Treasury");
+        dataTable.Columns.Add("Expenses");
         dataTable.Columns.Add("⭐");
 
         foreach (var player in Game.Players.ToList())
@@ -400,6 +401,7 @@ public class CurrentGameCompanyView : CurrentGameView
     private FrameView? Player;
     private FrameView? Company;
     private FrameView? Treasury;
+    private FrameView? Expenses;
     private FrameView? Rounds;
     private FrameView? Employees;
     private FrameView? Consultants;
@@ -446,6 +448,7 @@ public class CurrentGameCompanyView : CurrentGameView
         SetupPlayer();
         SetupCompany();
         SetupTreasury();
+        SetupExpenses();
         SetupRounds();
 
         Add(Header);
@@ -504,7 +507,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Player = new()
         {
             Title = "Player",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
             X = 0,
             Y = 0
@@ -520,7 +523,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Company = new()
         {
             Title = "Company",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
             X = Pos.Right(Player!),
             Y = 0
@@ -536,15 +539,33 @@ public class CurrentGameCompanyView : CurrentGameView
         Treasury = new()
         {
             Title = "Treasury",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
             X = Pos.Right(Company!),
             Y = 0
         };
 
-        Treasury.Add(new Label { Text = $"{CurrentPlayer.Company.Treasury} $" });
+        Treasury.Add(new Label { Text = $"Balance: {CurrentPlayer.Company.Treasury} $" });
 
         Header!.Add(Treasury);
+    }
+
+
+
+    private void SetupExpenses()
+    {
+        Expenses = new()
+        {
+            Title = "Expenses / turn",
+            Width = Dim.Percent(20),
+            Height = Dim.Auto(DimAutoStyle.Content),
+            X = Pos.Right(Treasury!),
+            Y = 0
+        };
+
+        Expenses.Add(new Label { Text = $"{CurrentPlayer.Company.Employees.Sum(e => e.Salary)} $" });
+
+        Header!.Add(Expenses);
     }
 
     private void SetupRounds()
@@ -552,9 +573,9 @@ public class CurrentGameCompanyView : CurrentGameView
         Rounds = new()
         {
             Title = "Rounds",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
-            X = Pos.Right(Treasury!),
+            X = Pos.Right(Expenses!),
             Y = 0
         };
 
@@ -699,6 +720,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Header!.Remove(Player);
         Header!.Remove(Company);
         Header!.Remove(Treasury);
+        Header!.Remove(Expenses);
         Header!.Remove(Rounds);
 
         Remove(Header);
