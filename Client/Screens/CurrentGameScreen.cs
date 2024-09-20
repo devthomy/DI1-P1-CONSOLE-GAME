@@ -173,7 +173,7 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
 
         var loadingText = new Label()
         {
-            Text = "Waiting for other players...",
+            Text = "Waiting players...",
             X = Pos.Center(),
             Y = Pos.Center()
         };

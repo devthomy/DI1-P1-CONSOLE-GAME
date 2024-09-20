@@ -35,7 +35,7 @@ public class Game(string name, int rounds = 15)
         return Status == GameStatus.Waiting;
     }
 
-    public bool CanStartANewRound()
+        public bool CanStartANewRound()
     {
         return
             Status == GameStatus.InProgress &&
