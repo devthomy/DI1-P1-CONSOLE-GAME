@@ -266,7 +266,7 @@ public class CurrentGameMainView : CurrentGameView
         dataTable.Columns.Add("Name");
         dataTable.Columns.Add("Company");
         dataTable.Columns.Add("Treasury");
-        dataTable.Columns.Add("Expenses");
+        dataTable.Columns.Add("Expenses");//Salary
         dataTable.Columns.Add("⭐");
 
         foreach (var player in Game.Players.ToList())
@@ -397,11 +397,10 @@ public class CurrentGameCompanyView : CurrentGameView
     private View? Body;
     private View? LeftBody;
     private View? RightBody;
-
     private FrameView? Player;
     private FrameView? Company;
     private FrameView? Treasury;
-    private FrameView? Expenses;
+    private FrameView? Expenses; //Salary
     private FrameView? Rounds;
     private FrameView? Employees;
     private FrameView? Consultants;
@@ -448,7 +447,7 @@ public class CurrentGameCompanyView : CurrentGameView
         SetupPlayer();
         SetupCompany();
         SetupTreasury();
-        SetupExpenses();
+        SetupExpenses(); //Salary
         SetupRounds();
 
         Add(Header);
@@ -539,19 +538,20 @@ public class CurrentGameCompanyView : CurrentGameView
         Treasury = new()
         {
             Title = "Treasury",
-            Width = Dim.Percent(20),
+            Width = Dim.Percent(25),
             Height = Dim.Auto(DimAutoStyle.Content),
             X = Pos.Right(Company!),
             Y = 0
         };
 
-        Treasury.Add(new Label { Text = $"Balance: {CurrentPlayer.Company.Treasury} $" });
+        Treasury.Add(new Label { Text = $"{CurrentPlayer.Company.Treasury} $" });
 
         Header!.Add(Treasury);
     }
 
 
 
+    // Total of salaries to employees in table
     private void SetupExpenses()
     {
         Expenses = new()
@@ -720,7 +720,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Header!.Remove(Player);
         Header!.Remove(Company);
         Header!.Remove(Treasury);
-        Header!.Remove(Expenses);
+        Header!.Remove(Expenses); //Salary
         Header!.Remove(Rounds);
 
         Remove(Header);

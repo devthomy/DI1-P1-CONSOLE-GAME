@@ -1,9 +1,12 @@
 using FluentResults;
+
 using FluentValidation;
+
 using Server.Actions.Contracts;
 using Server.Hubs.Contracts;
 using Server.Models;
 using Server.Persistence.Contracts;
+
 using static Server.Models.RoundAction;
 
 namespace Server.Actions;
@@ -83,6 +86,7 @@ public class ActInRound(
         // Add the action to the round
         round.Actions.Add(roundAction);
 
+
         // Save the round
         await roundsRepository.SaveRound(round);
 
@@ -91,6 +95,7 @@ public class ActInRound(
         {
             var finishRoundParams = new FinishRoundParams(Round: round);
             var finishRoundResult = await finishRoundAction.PerformAsync(finishRoundParams);
+
 
             if (finishRoundResult.IsFailed)
             {

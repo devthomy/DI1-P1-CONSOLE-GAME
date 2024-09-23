@@ -1,9 +1,12 @@
 using FluentResults;
+
 using FluentValidation;
+
 using Server.Actions.Contracts;
 using Server.Hubs.Contracts;
 using Server.Models;
 using Server.Persistence.Contracts;
+
 using static Server.Models.GenerateNewConsultantRoundAction;
 
 namespace Server.Actions;
@@ -83,12 +86,19 @@ public class FinishRound(
             }
         }
 
+
+
         // Check if a new round can be started
         if (round.Game.CanStartANewRound())
         {
             var startRoundActionParams = new StartRoundParams(Game: round.Game);
             var startRoundActionResult = await startRoundAction.PerformAsync(startRoundActionParams);
             var newRound = startRoundActionResult.Value;
+
+            foreach (var gamePlayer in round.Game.Players)
+            {
+                gamePlayer.Company?.DeductSalaries();
+            }
 
             await gameHubService.UpdateCurrentGame(gameId: round.GameId);
 
