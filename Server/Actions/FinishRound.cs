@@ -1,18 +1,17 @@
 using FluentResults;
-
 using FluentValidation;
-
 using Server.Actions.Contracts;
 using Server.Hubs.Contracts;
 using Server.Models;
 using Server.Persistence.Contracts;
-
 using static Server.Models.GenerateNewConsultantRoundAction;
 
 namespace Server.Actions;
 
+// Parameters required to finish a round
 public sealed record FinishRoundParams(int? RoundId = null, Round? Round = null);
 
+// Validator for FinishRoundParams
 public class FinishRoundValidator : AbstractValidator<FinishRoundParams>
 {
     public FinishRoundValidator()
@@ -22,6 +21,7 @@ public class FinishRoundValidator : AbstractValidator<FinishRoundParams>
     }
 }
 
+// Action class to finish a round
 public class FinishRound(
     IRoundsRepository roundsRepository,
     IAction<ApplyRoundActionParams, Result> applyRoundActionAction,
@@ -30,11 +30,14 @@ public class FinishRound(
     IGameHubService gameHubService
 ) : IAction<FinishRoundParams, Result<Round>>
 {
+    // Method to perform the action
     public async Task<Result<Round>> PerformAsync(FinishRoundParams actionParams)
     {
+        // Validate the action parameters
         var actionValidator = new FinishRoundValidator();
         var actionValidationResult = await actionValidator.ValidateAsync(actionParams);
 
+        // Return validation errors if any
         if (actionValidationResult.Errors.Count != 0)
         {
             return Result.Fail(actionValidationResult.Errors.Select(e => e.ErrorMessage));
@@ -42,6 +45,7 @@ public class FinishRound(
 
         var (roundId, round) = actionParams;
 
+        // Retrieve the round if not provided
         round ??= await roundsRepository.GetById(roundId!.Value);
 
         if (round is null)
@@ -51,6 +55,7 @@ public class FinishRound(
 
         var rnd = new Random();
 
+        // Determine if a new consultant should be generated
         var newConsultantShouldBeGenerated = rnd.Next(2) == 1;
 
         if (newConsultantShouldBeGenerated)
@@ -66,6 +71,7 @@ public class FinishRound(
             await roundsRepository.SaveRound(round);
         }
 
+        // Apply each action in the round
         foreach (var action in round.Actions)
         {
             var applyRoundActionParams = new ApplyRoundActionParams(RoundAction: action, Game: round.Game);
@@ -77,6 +83,7 @@ public class FinishRound(
             }
         }
 
+        // Check if a new round can be started
         if (round.Game.CanStartANewRound())
         {
             var startRoundActionParams = new StartRoundParams(Game: round.Game);
