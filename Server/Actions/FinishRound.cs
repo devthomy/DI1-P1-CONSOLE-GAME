@@ -95,10 +95,12 @@ public class FinishRound(
             var startRoundActionResult = await startRoundAction.PerformAsync(startRoundActionParams);
             var newRound = startRoundActionResult.Value;
 
+            #region DeductSalaries
             foreach (var gamePlayer in round.Game.Players)
             {
                 gamePlayer.Company?.DeductSalaries();
             }
+            #endregion
 
             await gameHubService.UpdateCurrentGame(gameId: round.GameId);
 
