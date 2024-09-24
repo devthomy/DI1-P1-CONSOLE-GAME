@@ -86,7 +86,7 @@ public class FinishRound(
             var startRoundActionResult = await startRoundAction.PerformAsync(startRoundActionParams);
 
 
-            // Step 5: Deduct salaries from all companies and save the changes
+            //Deduct salaries from all companies and save the changes
             foreach (var player in round.Game.Players)
             {
                 if (player.Company != null)
@@ -99,6 +99,7 @@ public class FinishRound(
                 }
             }
             
+
             if (startRoundActionResult.IsFailed)
             {
                 return Result.Fail<Round>(startRoundActionResult.Errors);
