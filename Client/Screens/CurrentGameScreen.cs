@@ -551,7 +551,7 @@ public class CurrentGameCompanyView : CurrentGameView
 
 
 
-    // Total of salaries to employees in table
+    // Total of salaries to employees in table using foreach
     private void SetupExpenses()
     {
         Expenses = new()
@@ -563,10 +563,17 @@ public class CurrentGameCompanyView : CurrentGameView
             Y = 0
         };
 
-        Expenses.Add(new Label { Text = $"{CurrentPlayer.Company.Employees.Sum(e => e.Salary)} $" });
+        int totalSalaries = 0;
+        foreach (var employee in CurrentPlayer.Company.Employees)
+        {
+            totalSalaries += employee.Salary / 365;
+        }
+
+        Expenses.Add(new Label { Text = $"{totalSalaries} $" });
 
         Header!.Add(Expenses);
     }
+
 
     private void SetupRounds()
     {
