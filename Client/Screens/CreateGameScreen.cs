@@ -248,7 +248,8 @@ public class CreateGameForm
         X = Pos.Right(RoundsLabel),
         Y = Pos.Top(RoundsLabel),
         Width = Dim.Fill(),
-        Text = ""
+        Text = "",
+        
     };
 
     // Ajoutez les événements de changement de texte
@@ -256,6 +257,9 @@ public class CreateGameForm
     PlayerNameField.TextChanged += OnFieldTextChanged;
     CompanyNameField.TextChanged += OnFieldTextChanged;
     RoundsField.TextChanged += OnFieldTextChanged;
+
+    RoundsField.TextChanged += OnRoundsFieldTextChanged;
+
 
     ButtonsView = new View()
     {
@@ -315,6 +319,35 @@ private void UpdateSubmitButtonVisibility()
                            !string.IsNullOrEmpty(CompanyNameField.Text) &&
                            !string.IsNullOrEmpty(RoundsField.Text);
 
-    SubmitButton.Visible = allFieldsFilled; // Met à jour la visibilité du bouton
+
+    SubmitButton.Visible = allFieldsFilled; 
+    }
+    private void OnRoundsFieldTextChanged(object? sender, EventArgs e)
+{
+    string text = RoundsField.Text.ToString()!;
+
+    string numericText = new string(text.Where(char.IsDigit).ToArray());
+
+    if (int.TryParse(numericText, out int value))
+    {
+        if (value > 100)
+        {
+            numericText = "100"; 
+        }
+        if (value <15 && numericText.Length>1)
+        {
+            numericText = "15";
+        }
+    }
+
+    if (text != numericText)
+    {
+        RoundsField.Text = numericText;
+        RoundsField.CursorPosition = numericText.Length;
+    }
 }
+
 }
+
+
+
