@@ -51,7 +51,7 @@ public class StartGame(
             return Result.Fail("Game cannot be started.");
         }
 
-        game.Status = GameStatus.InProgress;
+        game.Status = GameStatus.InProgress; 
 
         await gamesRepository.SaveGame(game);
 

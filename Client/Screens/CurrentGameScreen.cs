@@ -50,7 +50,6 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         var gameName = CurrentGame is null ? "..." : CurrentGame.Name;
         Target.Title = $"{MainWindow.Title} - [Game {gameName}]";
     }
-
     private async Task LoadGame()
     {
         var hubConnection = new HubConnectionBuilder()
@@ -70,14 +69,14 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
             .AddJsonProtocol()
             .Build();
 
-        hubConnection.On<GameOverview>("CurrentGameUpdated", data =>
+        hubConnection.On<GameOverview>("CurrentGameUpdated", async data =>
         {
             CurrentGame = data;
             ReloadWindowTitle();
             CurrentGameLoading = false;
             CurrentRoundAction = null;
             if (data.Status == "InProgress") { CurrentGameStarted = true; }
-            if (data.Status == "Ended") { CurrentGameEnded = true; }
+            if (data.Status == "Finished") { await DisplayEndGameView(); }//passer à la fin de la partie
         });
 
         await hubConnection.StartAsync();
@@ -102,6 +101,32 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         while (CurrentGameLoading) { await Task.Delay(100); }
 
         Target.Remove(loadingDialog);
+    }
+
+    private async Task DisplayEndGameView()//écran de fin de partie
+    {
+        Target.RemoveAll();
+
+        var gameOverLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = Pos.Center() - 2,
+            Text = "Game Over"
+        };
+
+        Target.Add(gameOverLabel);
+
+        var winnerLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = Pos.Center(),
+            Text = $"Winner: {CurrentGame!.Players.OrderByDescending(p => p.Company.Treasury).First().Name}"
+        };
+
+        Target.Add(winnerLabel);
+
+
+        await Task.CompletedTask;
     }
 
     private async Task DisplayMainView()
