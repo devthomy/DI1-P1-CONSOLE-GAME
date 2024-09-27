@@ -2,10 +2,11 @@ using System.ComponentModel;
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using JetBrains.Annotations;
+
 using Terminal.Gui;
 
 namespace Client.Screens;
-
 public class CreateGameScreen(Window target)
 {
     private Window Target { get; } = target;
@@ -16,6 +17,7 @@ public class CreateGameScreen(Window target)
     private bool Submitted = false;
     private bool Returned = false;
     private bool Errored = false;
+
 
     public async Task Show()
     {
@@ -81,6 +83,17 @@ public class CreateGameScreen(Window target)
         }
     }
 
+    public class FormValidator
+    {
+        // Méthode pour vérifier si tous les champs sont remplis
+        public bool AreFieldsFilled(string gameName, string playerName, string companyName)
+        {
+            return !string.IsNullOrEmpty(gameName) && 
+                !string.IsNullOrEmpty(playerName) && 
+                !string.IsNullOrEmpty(companyName);
+        }
+    }
+
     private async Task CreateGame()
     {
         Target.Remove(Form.FormView);
@@ -112,11 +125,11 @@ public class CreateGameScreen(Window target)
             BaseAddress = new Uri($"{WssConfig.WebApiServerScheme}://{WssConfig.WebApiServerDomain}:{WssConfig.WebApiServerPort}"),
         };
 
-        var gameName = Form.GameNameField.Text.ToString();
-        var playerName = Form.PlayerNameField.Text.ToString();
-        var companyName = Form.CompanyNameField.Text.ToString();
+     
         var rounds = int.Parse(Form.RoundsField.Text.ToString()!);
-
+        var gameName = Form.GameNameField.Text.Trim();
+        var playerName = Form.PlayerNameField.Text.Trim();
+        var companyName = Form.CompanyNameField.Text.Trim();        
         var requestBody = new { gameName, playerName, companyName, rounds };
         var request = httpClient.PostAsJsonAsync("/games", requestBody);
         var response = await request;
@@ -173,112 +186,168 @@ public class CreateGameForm
     public TextField RoundsField { get; }
 
     public CreateGameForm()
+{
+    GameNameLabel = new Label()
     {
-        GameNameLabel = new Label()
+        X = 0,
+        Y = 0,
+        Width = 20,
+        Text = "Game name :"
+    };
+
+    PlayerNameLabel = new Label()
+    {
+        X = Pos.Left(GameNameLabel),
+        Y = Pos.Bottom(GameNameLabel) + 1,
+        Width = 20,
+        Text = "Player name :"
+    };
+
+    CompanyNameLabel = new Label()
+    {
+        X = Pos.Left(PlayerNameLabel),
+        Y = Pos.Bottom(PlayerNameLabel) + 1,
+        Width = 20,
+        Text = "Company name :"
+    };
+
+    RoundsLabel = new Label()
+    {
+        X = Pos.Left(CompanyNameLabel),
+        Y = Pos.Bottom(CompanyNameLabel) + 1,
+        Width = 20,
+        Text = "Rounds (1 - 100) :"
+    };
+
+    GameNameField = new TextField()
+    {
+        X = Pos.Right(GameNameLabel),
+        Y = Pos.Top(GameNameLabel),
+        Width = Dim.Fill(),
+        Text = ""
+    };
+
+    PlayerNameField = new TextField()
+    {
+        X = Pos.Right(PlayerNameLabel),
+        Y = Pos.Top(PlayerNameLabel),
+        Width = Dim.Fill(),
+        Text = ""
+    };
+
+    CompanyNameField = new TextField()
+    {
+        X = Pos.Right(CompanyNameLabel),
+        Y = Pos.Top(CompanyNameLabel),
+        Width = Dim.Fill(),
+        Text = ""
+    };
+
+    RoundsField = new TextField()
+    {
+        X = Pos.Right(RoundsLabel),
+        Y = Pos.Top(RoundsLabel),
+        Width = Dim.Fill(),
+        Text = "",
+        
+    };
+
+    // Ajoutez les événements de changement de texte
+    GameNameField.TextChanged += OnFieldTextChanged;
+    PlayerNameField.TextChanged += OnFieldTextChanged;
+    CompanyNameField.TextChanged += OnFieldTextChanged;
+    RoundsField.TextChanged += OnFieldTextChanged;
+
+    RoundsField.TextChanged += OnRoundsFieldTextChanged;
+
+
+    ButtonsView = new View()
+    {
+        Width = 1,
+        Height = 1,
+        X = Pos.Center(),
+        Y = Pos.Bottom(RoundsLabel) + 1
+    };
+
+    SubmitButton = new Button()
+    {
+        Text = "Submit",
+        IsDefault = true,
+        Visible = false // Masquer le bouton au départ
+    };
+
+    ReturnButton = new Button()
+    {
+        Text = "Return",
+        IsDefault = false,
+        X = Pos.Right(SubmitButton) + 1
+    };
+
+    SubmitButton.Accept += OnSubmit;
+    ReturnButton.Accept += OnReturn;
+
+    ButtonsView.Add(SubmitButton, ReturnButton);
+
+    var submitButtonWidth = SubmitButton.Width;
+    var returnButtonWidth = ReturnButton.Width;
+
+    ButtonsView.Width = submitButtonWidth + returnButtonWidth + 1;
+
+    FormView = new View()
+    {
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+
+    FormView.Add(
+        GameNameLabel, PlayerNameLabel, CompanyNameLabel, RoundsLabel,
+        GameNameField, PlayerNameField, CompanyNameField, RoundsField,
+        ButtonsView
+    );
+}
+
+private void OnFieldTextChanged(object? sender, EventArgs e)
+{
+    UpdateSubmitButtonVisibility();
+}
+
+private void UpdateSubmitButtonVisibility()
+{
+    // Vérifie si tous les champs sont remplis
+    bool allFieldsFilled = !string.IsNullOrEmpty(GameNameField.Text) &&
+                           !string.IsNullOrEmpty(PlayerNameField.Text) &&
+                           !string.IsNullOrEmpty(CompanyNameField.Text) &&
+                           !string.IsNullOrEmpty(RoundsField.Text);
+
+
+    SubmitButton.Visible = allFieldsFilled; 
+    }
+    private void OnRoundsFieldTextChanged(object? sender, EventArgs e)
+{
+    string text = RoundsField.Text.ToString()!;
+
+    string numericText = new string(text.Where(char.IsDigit).ToArray());
+
+    if (int.TryParse(numericText, out int value))
+    {
+        if (value > 100)
         {
-            X = 0,
-            Y = 0,
-            Width = 20,
-            Text = "Game name :"
-        };
-
-        PlayerNameLabel = new Label()
+            numericText = "100"; 
+        }
+        if (value <15 && numericText.Length>1)
         {
-            X = Pos.Left(GameNameLabel),
-            Y = Pos.Bottom(GameNameLabel) + 1,
-            Width = 20,
-            Text = "Player name :"
-        };
+            numericText = "15";
+        }
+    }
 
-        CompanyNameLabel = new Label()
-        {
-            X = Pos.Left(PlayerNameLabel),
-            Y = Pos.Bottom(PlayerNameLabel) + 1,
-            Width = 20,
-            Text = "Company name :"
-        };
-
-        RoundsLabel = new Label()
-        {
-            X = Pos.Left(CompanyNameLabel),
-            Y = Pos.Bottom(CompanyNameLabel) + 1,
-            Width = 20,
-            Text = "Rounds (1 - 100) :"
-        };
-
-        GameNameField = new TextField()
-        {
-            X = Pos.Right(GameNameLabel),
-            Y = Pos.Top(GameNameLabel),
-            Width = Dim.Fill(),
-            Text = ""
-        };
-
-        PlayerNameField = new TextField()
-        {
-            X = Pos.Right(PlayerNameLabel),
-            Y = Pos.Top(PlayerNameLabel),
-            Width = Dim.Fill(),
-            Text = ""
-        };
-
-        CompanyNameField = new TextField()
-        {
-            X = Pos.Right(CompanyNameLabel),
-            Y = Pos.Top(CompanyNameLabel),
-            Width = Dim.Fill(),
-            Text = ""
-        };
-
-        RoundsField = new TextField()
-        {
-            X = Pos.Right(RoundsLabel),
-            Y = Pos.Top(RoundsLabel),
-            Width = Dim.Fill(),
-            Text = ""
-        };
-
-        ButtonsView = new View()
-        {
-            Width = 1,
-            Height = 1,
-            X = Pos.Center(),
-            Y = Pos.Bottom(RoundsLabel) + 1
-        };
-
-        SubmitButton = new Button()
-        {
-            Text = "Submit",
-            IsDefault = true
-        };
-
-        ReturnButton = new Button()
-        {
-            Text = "Return",
-            IsDefault = false,
-            X = Pos.Right(SubmitButton) + 1
-        };
-
-        SubmitButton.Accept += OnSubmit;
-        ReturnButton.Accept += OnReturn;
-
-        ButtonsView.Add(SubmitButton, ReturnButton);
-
-        var submitButtonWidth = SubmitButton.Width;
-        var returnButtonWidth = ReturnButton.Width;
-
-        ButtonsView.Width = submitButtonWidth + returnButtonWidth + 1;
-
-        FormView = new View()
-        {
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-
-        FormView.Add(
-            GameNameLabel, PlayerNameLabel, CompanyNameLabel, RoundsLabel,
-            GameNameField, PlayerNameField, CompanyNameField, RoundsField,
-            ButtonsView
-        );
+    if (text != numericText)
+    {
+        RoundsField.Text = numericText;
+        RoundsField.CursorPosition = numericText.Length;
     }
 }
+
+}
+
+
+

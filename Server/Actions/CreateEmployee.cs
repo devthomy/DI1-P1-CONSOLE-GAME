@@ -74,7 +74,7 @@ public class CreateEmployee(
         await employeesRepository.SaveEmployee(employee);
 
         await gameHubService.UpdateCurrentGame(gameId: company.Player.GameId);
-
+        
         return Result.Ok(employee);
     }
 }
