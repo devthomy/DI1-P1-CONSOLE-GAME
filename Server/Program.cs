@@ -29,6 +29,7 @@ builder.Services.AddTransient<IAction<ActInRoundParams, Result<Round>>, ActInRou
 builder.Services.AddTransient<IAction<ApplyRoundActionParams, Result>, ApplyRoundAction>();
 builder.Services.AddTransient<IAction<CreateCompanyParams, Result<Company>>, CreateCompany>();
 builder.Services.AddTransient<IAction<CreateEmployeeParams, Result<Employee>>, CreateEmployee>();
+builder.Services.AddTransient<IAction<CreateConsultantParams, Result<Consultant>>, CreateConsultant>();
 builder.Services.AddTransient<IAction<CreateGameParams, Result<Game>>, CreateGame>();
 builder.Services.AddTransient<IAction<CreatePlayerParams, Result<Player>>, CreatePlayer>();
 builder.Services.AddTransient<IAction<FinishGameParams, Result<Game>>, FinishGame>();

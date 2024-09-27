@@ -12,8 +12,10 @@ using Terminal.Gui;
 
 namespace Client.Screens;
 
+// Main class for the Join Game screen
 public class JoinGameScreen(Window target)
 {
+    // Properties and fields to manage the UI and state
     private Window Target { get; } = target;
     private readonly ListView GamesList = new();
     private readonly Button ListReturnButton = new() { Text = "Return" };
@@ -27,12 +29,14 @@ public class JoinGameScreen(Window target)
     }
     private int? GameId = null;
 
+    // Flags to manage the screen state
     private bool Loading = true;
     private bool Errored = false;
     private bool ListReturned = false;
     private bool FormReturned = false;
     private bool FormSubmitted = false;
 
+    // Main method to display the screen and manage the flow
     public async Task Show()
     {
         await BeforeShow();
@@ -71,11 +75,12 @@ public class JoinGameScreen(Window target)
             return;
         }
 
+        // Create and display the current game screen
         var currentGameScreen = new CurrentGameScreen(Target, (int) GameId!, Form.PlayerNameField.Text.ToString()!);
-
         await currentGameScreen.Show();
     }
 
+    // Initialize the screen before showing
     private Task BeforeShow()
     {
         Target.RemoveAll();
@@ -83,12 +88,14 @@ public class JoinGameScreen(Window target)
         return Task.CompletedTask;
     }
 
+    // Return to the main menu
     private async Task Return()
     {
         var mainMenuScreen = new MainMenuScreen(Target);
         await mainMenuScreen.Show();
     }
 
+    // Reload the list data
     private void ReloadListData()
     {
         var dataSource = new JoinGameChoiceListDataSource();
@@ -96,6 +103,7 @@ public class JoinGameScreen(Window target)
         GamesList.Source = dataSource;
     }
 
+    // Load available games using SignalR
     private async Task LoadGames()
     {
         var hubConnection = new HubConnectionBuilder()
@@ -123,6 +131,7 @@ public class JoinGameScreen(Window target)
 
         await hubConnection.StartAsync();
 
+        // Display loading dialog
         var loadingDialog = new Dialog()
         {
             Width = 18,
@@ -137,7 +146,6 @@ public class JoinGameScreen(Window target)
         };
 
         loadingDialog.Add(loadingText);
-
         Target.Add(loadingDialog);
 
         while (Loading) { await Task.Delay(100); }
@@ -145,6 +153,7 @@ public class JoinGameScreen(Window target)
         Target.Remove(loadingDialog);
     }
 
+    // Display the game selection list
     private async Task SelectGame()
     {
         GamesList.X = GamesList.Y = Pos.Center();
@@ -165,6 +174,7 @@ public class JoinGameScreen(Window target)
         while (GameId is null && !ListReturned) { await Task.Delay(100); };
     }
 
+    // Display the join game form
     private async Task DisplayForm(bool errored = false)
     {
         Target.RemoveAll();
@@ -184,10 +194,12 @@ public class JoinGameScreen(Window target)
         }
     }
 
+    // Join the selected game
     private async Task JoinGame()
     {
         Target.Remove(Form.FormView);
 
+        // Display loading dialog
         var loadingDialog = new Dialog()
         {
             Width = 17,
@@ -202,9 +214,9 @@ public class JoinGameScreen(Window target)
         };
 
         loadingDialog.Add(loadingText);
-
         Target.Add(loadingDialog);
 
+        // Set up HTTP client
         var httpHandler = new HttpClientHandler
         {
             ServerCertificateCustomValidationCallback = (_, __, ___, ____) => true
@@ -229,6 +241,7 @@ public class JoinGameScreen(Window target)
     }
 }
 
+// Class to manage the data source for the game list
 public class JoinGameChoiceListDataSource : List<JoinableGame>, IListDataSource
 {
     public int Length => Count;
@@ -261,8 +274,10 @@ public class JoinGameChoiceListDataSource : List<JoinableGame>, IListDataSource
     }
 }
 
+// Class to manage the join game form
 public class JoinGameForm
 {
+    // Properties and events to manage the form
     private EventHandler<HandledEventArgs> _onSubmit = (_, __) => { };
     private EventHandler<HandledEventArgs> _onReturn = (_, __) => { };
 
@@ -287,6 +302,7 @@ public class JoinGameForm
         }
     }
 
+    // UI elements of the form
     public View FormView { get; }
     public View ButtonsView { get; }
     public Button SubmitButton { get; }
@@ -296,6 +312,7 @@ public class JoinGameForm
     public TextField PlayerNameField { get; }
     public TextField CompanyNameField { get; }
 
+    // Constructor to initialize the form
     public JoinGameForm()
     {
         PlayerNameLabel = new Label()
@@ -305,7 +322,7 @@ public class JoinGameForm
             Width = 20,
             Text = "Player name :"
         };
-
+ 
         CompanyNameLabel = new Label()
         {
             X = Pos.Left(PlayerNameLabel),

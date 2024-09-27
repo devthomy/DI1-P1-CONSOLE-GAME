@@ -173,7 +173,7 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
 
         var loadingText = new Label()
         {
-            Text = "Waiting for other players...",
+            Text = "Waiting players...",
             X = Pos.Center(),
             Y = Pos.Center()
         };
@@ -266,6 +266,7 @@ public class CurrentGameMainView : CurrentGameView
         dataTable.Columns.Add("Name");
         dataTable.Columns.Add("Company");
         dataTable.Columns.Add("Treasury");
+        dataTable.Columns.Add("Expenses");//Salary
         dataTable.Columns.Add("⭐");
 
         foreach (var player in Game.Players.ToList())
@@ -396,10 +397,10 @@ public class CurrentGameCompanyView : CurrentGameView
     private View? Body;
     private View? LeftBody;
     private View? RightBody;
-
     private FrameView? Player;
     private FrameView? Company;
     private FrameView? Treasury;
+    private FrameView? Expenses; //Salary
     private FrameView? Rounds;
     private FrameView? Employees;
     private FrameView? Consultants;
@@ -446,6 +447,7 @@ public class CurrentGameCompanyView : CurrentGameView
         SetupPlayer();
         SetupCompany();
         SetupTreasury();
+        SetupExpenses(); //Salary
         SetupRounds();
 
         Add(Header);
@@ -504,7 +506,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Player = new()
         {
             Title = "Player",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
             X = 0,
             Y = 0
@@ -520,7 +522,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Company = new()
         {
             Title = "Company",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
             X = Pos.Right(Player!),
             Y = 0
@@ -547,14 +549,40 @@ public class CurrentGameCompanyView : CurrentGameView
         Header!.Add(Treasury);
     }
 
+
+
+    // Total of salaries to employees in table using foreach
+    private void SetupExpenses()
+    {
+        Expenses = new()
+        {
+            Title = "Expenses / turn",
+            Width = Dim.Percent(20),
+            Height = Dim.Auto(DimAutoStyle.Content),
+            X = Pos.Right(Treasury!),
+            Y = 0
+        };
+
+        int totalSalaries = 0;
+        foreach (var employee in CurrentPlayer.Company.Employees)
+        {
+            totalSalaries += employee.Salary / 365;
+        }
+
+        Expenses.Add(new Label { Text = $"{totalSalaries} $" });
+
+        Header!.Add(Expenses);
+    }
+
+
     private void SetupRounds()
     {
         Rounds = new()
         {
             Title = "Rounds",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
-            X = Pos.Right(Treasury!),
+            X = Pos.Right(Expenses!),
             Y = 0
         };
 
@@ -699,6 +727,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Header!.Remove(Player);
         Header!.Remove(Company);
         Header!.Remove(Treasury);
+        Header!.Remove(Expenses); //Salary
         Header!.Remove(Rounds);
 
         Remove(Header);

@@ -32,9 +32,9 @@ public class TitleScreen(Window target)
         {
             displayedText += character;
             titleLabel.Text = displayedText;
-            await Task.Delay(100);
+            await Task.Delay(10);
         }
 
-        await Task.Delay(500);
+        await Task.Delay(10);
     }
 }
