@@ -203,7 +203,7 @@ public class CreateGameForm
             X = Pos.Left(CompanyNameLabel),
             Y = Pos.Bottom(CompanyNameLabel) + 1,
             Width = 20,
-            Text = "Rounds (15 - 100) :"
+            Text = "Rounds (1 - 100) :"
         };
 
         GameNameField = new TextField()

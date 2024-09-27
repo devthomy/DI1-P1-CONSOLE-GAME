@@ -103,30 +103,50 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         Target.Remove(loadingDialog);
     }
 
-    private async Task DisplayEndGameView()//écran de fin de partie
+    private async Task DisplayEndGameView()
     {
         Target.RemoveAll();
 
         var gameOverLabel = new Label
         {
             X = Pos.Center(),
-            Y = Pos.Center() - 2,
-            Text = "Game Over"
+            Y = 2,
+            Text = "Game Over - Final Leaderboard"
         };
 
         Target.Add(gameOverLabel);
 
-        var winnerLabel = new Label
+        var leaderboardView = new View()
         {
             X = Pos.Center(),
-            Y = Pos.Center(),
-            Text = $"Winner: {CurrentGame!.Players.OrderByDescending(p => p.Company.Treasury).First().Name}"
+            Y = Pos.Top(gameOverLabel) + 2,
+            Width = Dim.Percent(80),
+            Height = Dim.Percent(80)
         };
 
-        Target.Add(winnerLabel);
+        var rankedPlayers = CurrentGame!.Players.OrderByDescending(p => p.Company.Treasury).Take(10).ToList();
 
+        for (int i = 0; i < rankedPlayers.Count; i++)
+        {
+            var player = rankedPlayers[i];
+            var playerInfo = new Label()
+            {
+                X = 0,
+                Y = i * 2,
+                Text = $"{i + 1}. {player.Name} - {player.Company.Name} - {player.Company.Treasury:C}"
+            };
+
+            leaderboardView.Add(playerInfo);
+        }
+
+        Target.Add(leaderboardView);
 
         await Task.CompletedTask;
+    }
+
+    private void OnExitButtonClicked()
+    {
+        Application.RequestStop();
     }
 
     private async Task DisplayMainView()
