@@ -26,7 +26,7 @@ public sealed record CompanyOverview(
     ICollection<EmployeeOverview> Employees
 );
 
-public record ConsultantOverview(
+public sealed record ConsultantOverview(
     int Id,
     string Name,
     int SalaryRequirement,

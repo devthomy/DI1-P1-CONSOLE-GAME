@@ -50,7 +50,6 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         var gameName = CurrentGame is null ? "..." : CurrentGame.Name;
         Target.Title = $"{MainWindow.Title} - [Game {gameName}]";
     }
-
     private async Task LoadGame()
     {
         var hubConnection = new HubConnectionBuilder()
@@ -70,14 +69,14 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
             .AddJsonProtocol()
             .Build();
 
-        hubConnection.On<GameOverview>("CurrentGameUpdated", data =>
+        hubConnection.On<GameOverview>("CurrentGameUpdated", async data =>
         {
             CurrentGame = data;
             ReloadWindowTitle();
             CurrentGameLoading = false;
             CurrentRoundAction = null;
             if (data.Status == "InProgress") { CurrentGameStarted = true; }
-            if (data.Status == "Ended") { CurrentGameEnded = true; }
+            if (data.Status == "Finished") { await DisplayEndGameView(); }//passer à la fin de la partie
         });
 
         await hubConnection.StartAsync();
@@ -102,6 +101,52 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         while (CurrentGameLoading) { await Task.Delay(100); }
 
         Target.Remove(loadingDialog);
+    }
+
+    private async Task DisplayEndGameView()
+    {
+        Target.RemoveAll();
+
+        var gameOverLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = 2,
+            Text = "Game Over - Final Leaderboard"
+        };
+
+        Target.Add(gameOverLabel);
+
+        var leaderboardView = new View()
+        {
+            X = Pos.Center(),
+            Y = Pos.Top(gameOverLabel) + 2,
+            Width = Dim.Percent(80),
+            Height = Dim.Percent(80)
+        };
+
+        var rankedPlayers = CurrentGame!.Players.OrderByDescending(p => p.Company.Treasury).Take(10).ToList();
+
+        for (int i = 0; i < rankedPlayers.Count; i++)
+        {
+            var player = rankedPlayers[i];
+            var playerInfo = new Label()
+            {
+                X = 0,
+                Y = i * 2,
+                Text = $"{i + 1}. {player.Name} - {player.Company.Name} - {player.Company.Treasury:C}"
+            };
+
+            leaderboardView.Add(playerInfo);
+        }
+
+        Target.Add(leaderboardView);
+
+        await Task.CompletedTask;
+    }
+
+    private void OnExitButtonClicked()
+    {
+        Application.RequestStop();
     }
 
     private async Task DisplayMainView()
