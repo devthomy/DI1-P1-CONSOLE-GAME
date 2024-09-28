@@ -111,7 +111,7 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         {
             X = Pos.Center(),
             Y = 2,
-            Text = "Game Over - Final Leaderboard"
+            Text = "All rounds are played !",
         };
 
         Target.Add(gameOverLabel);
