@@ -141,6 +141,41 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
 
         Target.Add(leaderboardView);
 
+        var closeGameLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(leaderboardView) + 1,
+            Text = "Close Game"
+        };
+
+        closeGameLabel.MouseClick += (sender, args) =>
+        {
+            if (args.MouseEvent.Flags == MouseFlags.Button1Clicked)
+            {
+                Application.RequestStop();
+            }
+        };
+
+        Target.Add(closeGameLabel);
+
+        var returnToCreateGameLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(closeGameLabel) + 1,
+            Text = "Return to Main Menu"
+        };
+
+        returnToCreateGameLabel.MouseClick += async (sender, args) =>
+        {
+            if (args.MouseEvent.Flags == MouseFlags.Button1Clicked)
+            {
+                var mainMenuScreen = new MainMenuScreen(Target);
+                await mainMenuScreen.Show();
+            }
+        };
+
+        Target.Add(returnToCreateGameLabel);
+
         await Task.CompletedTask;
     }
 
@@ -164,6 +199,11 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
 
         while (!CurrentGameStarted)
         {
+            Target.Remove(mainView);
+            mainView = new CurrentGameMainView(CurrentGame!, PlayerName);
+            mainView.X = mainView.Y = Pos.Center();
+            mainView.OnStart = (_, __) => { CurrentGameStarted = true; };
+            Target.Add(mainView);
             await Task.Delay(100);
         }
     }
