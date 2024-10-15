@@ -141,28 +141,11 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
 
         Target.Add(leaderboardView);
 
-        var closeGameLabel = new Label
-        {
-            X = Pos.Center(),
-            Y = Pos.Bottom(leaderboardView) + 1,
-            Text = "Close Game"
-        };
-
-        closeGameLabel.MouseClick += (sender, args) =>
-        {
-            if (args.MouseEvent.Flags == MouseFlags.Button1Clicked)
-            {
-                Application.RequestStop();
-            }
-        };
-
-        Target.Add(closeGameLabel);
-
         var returnToCreateGameLabel = new Label
         {
             X = Pos.Center(),
-            Y = Pos.Bottom(closeGameLabel) + 1,
-            Text = "Return to Main Menu"
+            Y = Pos.Bottom(leaderboardView) + 1,
+            Text = "Return to Menu"
         };
 
         returnToCreateGameLabel.MouseClick += async (sender, args) =>
@@ -175,6 +158,23 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         };
 
         Target.Add(returnToCreateGameLabel);
+
+        var closeGameLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(returnToCreateGameLabel) + 1,
+            Text = "Close Game"
+        };
+
+        closeGameLabel.MouseClick += (sender, args) =>
+        {
+            if (args.MouseEvent.Flags == MouseFlags.Button1Clicked)
+            {
+                Application.RequestStop();
+            }
+        };
+
+        Target.Add(closeGameLabel);
 
         await Task.CompletedTask;
     }
