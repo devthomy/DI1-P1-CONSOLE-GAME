@@ -164,6 +164,11 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
 
         while (!CurrentGameStarted)
         {
+            Target.Remove(mainView);
+            mainView = new CurrentGameMainView(CurrentGame!, PlayerName);
+            mainView.X = mainView.Y = Pos.Center();
+            mainView.OnStart = (_, __) => { CurrentGameStarted = true; };
+            Target.Add(mainView);
             await Task.Delay(100);
         }
     }
