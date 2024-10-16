@@ -43,7 +43,7 @@ public class StartGame(
 
         if (game is null)
         {
-            Result.Fail($"Game with Id \"{gameId}\" not found.");
+            return Result.Fail($"Game with Id \"{gameId}\" not found.");
         }
 
         if (!game!.CanBeStarted())
@@ -51,7 +51,7 @@ public class StartGame(
             return Result.Fail("Game cannot be started.");
         }
 
-        game.Status = GameStatus.InProgress;
+        game.Status = GameStatus.InProgress; 
 
         await gamesRepository.SaveGame(game);
 

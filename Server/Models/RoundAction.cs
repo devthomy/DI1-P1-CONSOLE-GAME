@@ -84,6 +84,9 @@ public class ParticipateInCallForTendersRoundAction(int? playerId) : RoundAction
     }
 }
 
+
+
+
 public class RecruitAConsultantRoundAction(int? playerId) : RoundAction(playerId)
 {
     public class RecruitAConsultantPayload : RoundActionPayload
@@ -118,6 +121,7 @@ public class PassMyTurnRoundAction(int? playerId) : RoundAction(playerId)
 {
     protected override void ApplyPayload(RoundActionPayload payload)
     {
+        
     }
 }
 
@@ -135,3 +139,4 @@ public class GenerateNewConsultantRoundAction(int? gameId) : RoundAction(gameId)
         Payload = (GenerateNewConsultantPayload) payload;
     }
 }
+

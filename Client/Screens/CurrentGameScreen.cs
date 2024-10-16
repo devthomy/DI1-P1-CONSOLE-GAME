@@ -50,7 +50,6 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         var gameName = CurrentGame is null ? "..." : CurrentGame.Name;
         Target.Title = $"{MainWindow.Title} - [Game {gameName}]";
     }
-
     private async Task LoadGame()
     {
         var hubConnection = new HubConnectionBuilder()
@@ -70,14 +69,14 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
             .AddJsonProtocol()
             .Build();
 
-        hubConnection.On<GameOverview>("CurrentGameUpdated", data =>
+        hubConnection.On<GameOverview>("CurrentGameUpdated", async data =>
         {
             CurrentGame = data;
             ReloadWindowTitle();
             CurrentGameLoading = false;
             CurrentRoundAction = null;
             if (data.Status == "InProgress") { CurrentGameStarted = true; }
-            if (data.Status == "Ended") { CurrentGameEnded = true; }
+            if (data.Status == "Finished") { await DisplayEndGameView(); }//passer à la fin de la partie
         });
 
         await hubConnection.StartAsync();
@@ -104,6 +103,87 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
         Target.Remove(loadingDialog);
     }
 
+    private async Task DisplayEndGameView()
+    {
+        Target.RemoveAll();
+
+        var gameOverLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = 2,
+            Text = "All rounds are played !",
+        };
+
+        Target.Add(gameOverLabel);
+
+        var leaderboardView = new View()
+        {
+            X = Pos.Center(),
+            Y = Pos.Top(gameOverLabel) + 2,
+            Width = Dim.Percent(80),
+            Height = Dim.Percent(80)
+        };
+
+        var rankedPlayers = CurrentGame!.Players.OrderByDescending(p => p.Company.Treasury).Take(10).ToList();
+
+        for (int i = 0; i < rankedPlayers.Count; i++)
+        {
+            var player = rankedPlayers[i];
+            var playerInfo = new Label()
+            {
+                X = 0,
+                Y = i * 2,
+                Text = $"{i + 1}. {player.Name} - {player.Company.Name} - {player.Company.Treasury:C}"
+            };
+
+            leaderboardView.Add(playerInfo);
+        }
+
+        Target.Add(leaderboardView);
+
+        var returnToCreateGameLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(leaderboardView) + 1,
+            Text = "Return to Menu"
+        };
+
+        returnToCreateGameLabel.MouseClick += async (sender, args) =>
+        {
+            if (args.MouseEvent.Flags == MouseFlags.Button1Clicked)
+            {
+                var mainMenuScreen = new MainMenuScreen(Target);
+                await mainMenuScreen.Show();
+            }
+        };
+
+        Target.Add(returnToCreateGameLabel);
+
+        var closeGameLabel = new Label
+        {
+            X = Pos.Center(),
+            Y = Pos.Bottom(returnToCreateGameLabel) + 1,
+            Text = "Close Game"
+        };
+
+        closeGameLabel.MouseClick += (sender, args) =>
+        {
+            if (args.MouseEvent.Flags == MouseFlags.Button1Clicked)
+            {
+                Application.RequestStop();
+            }
+        };
+
+        Target.Add(closeGameLabel);
+
+        await Task.CompletedTask;
+    }
+
+    private void OnExitButtonClicked()
+    {
+        Application.RequestStop();
+    }
+
     private async Task DisplayMainView()
     {
         Target.RemoveAll();
@@ -119,6 +199,11 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
 
         while (!CurrentGameStarted)
         {
+            Target.Remove(mainView);
+            mainView = new CurrentGameMainView(CurrentGame!, PlayerName);
+            mainView.X = mainView.Y = Pos.Center();
+            mainView.OnStart = (_, __) => { CurrentGameStarted = true; };
+            Target.Add(mainView);
             await Task.Delay(100);
         }
     }
@@ -173,7 +258,7 @@ public class CurrentGameScreen(Window target, int gameId, string playerName)
 
         var loadingText = new Label()
         {
-            Text = "Waiting for other players...",
+            Text = "Waiting players...",
             X = Pos.Center(),
             Y = Pos.Center()
         };
@@ -266,6 +351,7 @@ public class CurrentGameMainView : CurrentGameView
         dataTable.Columns.Add("Name");
         dataTable.Columns.Add("Company");
         dataTable.Columns.Add("Treasury");
+        dataTable.Columns.Add("Expenses");//Salary
         dataTable.Columns.Add("⭐");
 
         foreach (var player in Game.Players.ToList())
@@ -396,14 +482,16 @@ public class CurrentGameCompanyView : CurrentGameView
     private View? Body;
     private View? LeftBody;
     private View? RightBody;
-
     private FrameView? Player;
     private FrameView? Company;
     private FrameView? Treasury;
+    private FrameView? Expenses; //Salary
     private FrameView? Rounds;
     private FrameView? Employees;
     private FrameView? Consultants;
     private FrameView? CallForTenders;
+    private FrameView? TrainingSession;
+    private FrameView? Session;
     private FrameView? Actions;
 
     public CurrentGameCompanyView(GameOverview game, string playerName)
@@ -446,6 +534,7 @@ public class CurrentGameCompanyView : CurrentGameView
         SetupPlayer();
         SetupCompany();
         SetupTreasury();
+        SetupExpenses(); //Salary
         SetupRounds();
 
         Add(Header);
@@ -480,6 +569,7 @@ public class CurrentGameCompanyView : CurrentGameView
         SetupEmployees();
         SetupConsultants();
         SetupCallForTenders();
+        SetupTrainingSession();
 
         Body!.Add(LeftBody);
     }
@@ -495,6 +585,7 @@ public class CurrentGameCompanyView : CurrentGameView
         };
 
         SetupActions();
+   
 
         Body!.Add(RightBody);
     }
@@ -504,7 +595,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Player = new()
         {
             Title = "Player",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
             X = 0,
             Y = 0
@@ -520,7 +611,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Company = new()
         {
             Title = "Company",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
             X = Pos.Right(Player!),
             Y = 0
@@ -547,14 +638,40 @@ public class CurrentGameCompanyView : CurrentGameView
         Header!.Add(Treasury);
     }
 
+
+
+    // Total of salaries to employees in table using foreach
+    private void SetupExpenses()
+    {
+        Expenses = new()
+        {
+            Title = "Expenses / turn",
+            Width = Dim.Percent(20),
+            Height = Dim.Auto(DimAutoStyle.Content),
+            X = Pos.Right(Treasury!),
+            Y = 0
+        };
+
+        int totalSalaries = 0;
+        foreach (var employee in CurrentPlayer.Company.Employees)
+        {
+            totalSalaries += employee.Salary / 365;
+        }
+
+        Expenses.Add(new Label { Text = $"{totalSalaries} $" });
+
+        Header!.Add(Expenses);
+    }
+
+
     private void SetupRounds()
     {
         Rounds = new()
         {
             Title = "Rounds",
-            Width = Dim.Percent(25),
+            Width = Dim.Percent(20),
             Height = Dim.Auto(DimAutoStyle.Content),
-            X = Pos.Right(Treasury!),
+            X = Pos.Right(Expenses!),
             Y = 0
         };
 
@@ -651,6 +768,18 @@ public class CurrentGameCompanyView : CurrentGameView
         LeftBody!.Add(Consultants);
     }
 
+    private void setupSession()
+    {
+        Session = new()
+        {
+         Title = "Session",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Percent(30)
+        };
+    }
+
     private void SetupCallForTenders()
     {
         CallForTenders = new()
@@ -658,11 +787,25 @@ public class CurrentGameCompanyView : CurrentGameView
             Title = "Call For Tenders",
             X = Pos.Left(Consultants!),
             Y = Pos.Bottom(Consultants!) + 1,
-            Width = Dim.Fill(),
+            Width = Dim.Fill(50),
             Height = Dim.Percent(30)
         };
 
         LeftBody!.Add(CallForTenders);
+    }
+
+    private void SetupTrainingSession()
+    {
+        TrainingSession = new()
+        {
+            Title = "Training Session",
+            X = Pos.Right(CallForTenders!),
+            Y = Pos.Bottom(Consultants!) + 1,
+            Width = Dim.Fill(),
+            Height = Dim.Percent(30)
+        };
+
+        LeftBody!.Add(TrainingSession);
     }
 
     private void SetupActions()
@@ -699,6 +842,7 @@ public class CurrentGameCompanyView : CurrentGameView
         Header!.Remove(Player);
         Header!.Remove(Company);
         Header!.Remove(Treasury);
+        Header!.Remove(Expenses); //Salary
         Header!.Remove(Rounds);
 
         Remove(Header);

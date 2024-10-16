@@ -1,53 +1,56 @@
 using FluentResults;
+
 using FluentValidation;
+
 using Server.Actions.Contracts;
 using Server.Hubs.Contracts;
 using Server.Models;
 using Server.Persistence.Contracts;
+
 using static Server.Models.RoundAction;
 
 namespace Server.Actions;
 
-// Parameters required to perform an action in a round
+// Paramètres requis pour effectuer une action dans un tour
 public sealed record ActInRoundParams(
-    RoundActionType ActionType,
-    RoundActionPayload ActionPayload,
-    int? RoundId = null,
-    Round? Round = null,
-    int? PlayerId = null,
-    Player? Player = null
+    RoundActionType ActionType, // Type d'action du tour
+    RoundActionPayload ActionPayload, // Charge utile de l'action du tour
+    int? RoundId = null, // Id du tour (optionnel)
+    Round? Round = null, // Tour (optionnel)
+    int? PlayerId = null, // Id du joueur (optionnel)
+    Player? Player = null // Joueur (optionnel)
 );
 
-// Validator for ActInRoundParams
+// Validateur pour ActInRoundParams
 public class ActInRoundValidator : AbstractValidator<ActInRoundParams>
 {
     public ActInRoundValidator()
     {
-        RuleFor(p => p.ActionType).NotEmpty();
-        RuleFor(p => p.ActionPayload).NotEmpty();
-        RuleFor(p => p.RoundId).NotEmpty().When(p => p.Round is null);
-        RuleFor(p => p.Round).NotEmpty().When(p => p.RoundId is null);
-        RuleFor(p => p.PlayerId).NotEmpty().When(p => p.Player is null);
-        RuleFor(p => p.Player).NotEmpty().When(p => p.PlayerId is null);
+        RuleFor(p => p.ActionType).NotEmpty(); // Règle : ActionType ne doit pas être vide
+        RuleFor(p => p.ActionPayload).NotEmpty(); // Règle : ActionPayload ne doit pas être vide
+        RuleFor(p => p.RoundId).NotEmpty().When(p => p.Round is null); // Règle : RoundId ne doit pas être vide si Round est null
+        RuleFor(p => p.Round).NotEmpty().When(p => p.RoundId is null); // Règle : Round ne doit pas être vide si RoundId est null
+        RuleFor(p => p.PlayerId).NotEmpty().When(p => p.Player is null); // Règle : PlayerId ne doit pas être vide si Player est null
+        RuleFor(p => p.Player).NotEmpty().When(p => p.PlayerId is null); // Règle : Player ne doit pas être vide si PlayerId est null
     }
 }
 
-// Action class to perform an action in a round
+// Classe d'action pour effectuer une action dans un tour
 public class ActInRound(
-    IRoundsRepository roundsRepository,
-    IPlayersRepository playersRepository,
-    IAction<FinishRoundParams, Result<Round>> finishRoundAction,
-    IGameHubService gameHubService
+    IRoundsRepository roundsRepository, // Référentiel des tours
+    IPlayersRepository playersRepository, // Référentiel des joueurs
+    IAction<FinishRoundParams, Result<Round>> finishRoundAction, // Action pour terminer un tour
+    IGameHubService gameHubService // Service de hub de jeu
 ) : IAction<ActInRoundParams, Result<Round>>
 {
-    // Method to perform the action
+    // Méthode pour effectuer l'action
     public async Task<Result<Round>> PerformAsync(ActInRoundParams actionParams)
     {
-        // Validate the action parameters
+        // Valider les paramètres de l'action
         var actionValidator = new ActInRoundValidator();
         var actionValidationResult = await actionValidator.ValidateAsync(actionParams);
 
-        // Return validation errors if any
+        // Retourner les erreurs de validation s'il y en a
         if (actionValidationResult.Errors.Count != 0)
         {
             return Result.Fail(actionValidationResult.Errors.Select(e => e.ErrorMessage));
@@ -55,52 +58,55 @@ public class ActInRound(
 
         var (actionType, actionPayload, roundId, round, playerId, player) = actionParams;
 
-        // Retrieve the round if not provided
+        // Récupérer le tour s'il n'est pas fourni
         round ??= await roundsRepository.GetById(roundId!.Value);
 
         if (round is null)
         {
-            Result.Fail($"Round with Id \"{roundId}\" not found.");
+            Result.Fail($"Round with Id \"{roundId}\" not found."); // Retourner une erreur si le tour n'est pas trouver
         }
 
-        // Retrieve the player if not provided
+        // Récupérer le joueur s'il n'est pas fourni
         player ??= await playersRepository.GetById(playerId!.Value);
 
         if (player is null)
         {
-            Result.Fail($"Player with Id \"{playerId}\" not found.");
+            Result.Fail($"Player with Id \"{playerId}\" not found."); // Retourner une erreur si le joueur n'est pas trouver
         }
 
-        // Check if the player can act in the round
+        // Vérifier si le joueur peut agir dans le tour
         if (!round!.CanPlayerActIn(player!.Id!.Value))
         {
-            return Result.Fail("Player cannot act in this round.");
+            return Result.Fail("Player cannot act in this round."); 
         }
 
-        // Create the round action
         var roundAction = CreateForType(actionType, player.Id.Value, actionPayload);
 
-        // Add the action to the round
-        round.Actions.Add(roundAction);
+        round.Actions.Add(roundAction); 
 
-        // Save the round
+        // Sauvegarder le tour
         await roundsRepository.SaveRound(round);
 
-        // Finish the round if everybody has played
+        // Terminer le tour si tout le monde a joué
         if (round.EverybodyPlayed())
         {
             var finishRoundParams = new FinishRoundParams(Round: round);
             var finishRoundResult = await finishRoundAction.PerformAsync(finishRoundParams);
 
+            foreach (var currentPlayer in round.Game.Players)
+            {
+                currentPlayer.Company?.DeductSalaries();
+            }
+
             if (finishRoundResult.IsFailed)
             {
-                return Result.Fail(finishRoundResult.Errors);
+                return Result.Fail(finishRoundResult.Errors); // Retourner une erreur si la fin du tour échoue
             }
         }
 
-        // Update the current game state
+        // Mettre à jour l'état actuel du jeu
         await gameHubService.UpdateCurrentGame(gameId: round.GameId);
 
-        return Result.Ok(round);
+        return Result.Ok(round); // Retourner le tour
     }
 }
