@@ -404,6 +404,8 @@ public class CurrentGameCompanyView : CurrentGameView
     private FrameView? Employees;
     private FrameView? Consultants;
     private FrameView? CallForTenders;
+    private FrameView? TrainingSession;
+    private FrameView? Session;
     private FrameView? Actions;
 
     public CurrentGameCompanyView(GameOverview game, string playerName)
@@ -480,6 +482,7 @@ public class CurrentGameCompanyView : CurrentGameView
         SetupEmployees();
         SetupConsultants();
         SetupCallForTenders();
+        SetupTrainingSession();
 
         Body!.Add(LeftBody);
     }
@@ -495,6 +498,7 @@ public class CurrentGameCompanyView : CurrentGameView
         };
 
         SetupActions();
+   
 
         Body!.Add(RightBody);
     }
@@ -651,6 +655,18 @@ public class CurrentGameCompanyView : CurrentGameView
         LeftBody!.Add(Consultants);
     }
 
+    private void setupSession()
+    {
+        Session = new()
+        {
+         Title = "Session",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Percent(30)
+        };
+    }
+
     private void SetupCallForTenders()
     {
         CallForTenders = new()
@@ -658,11 +674,25 @@ public class CurrentGameCompanyView : CurrentGameView
             Title = "Call For Tenders",
             X = Pos.Left(Consultants!),
             Y = Pos.Bottom(Consultants!) + 1,
-            Width = Dim.Fill(),
+            Width = Dim.Fill(50),
             Height = Dim.Percent(30)
         };
 
         LeftBody!.Add(CallForTenders);
+    }
+
+    private void SetupTrainingSession()
+    {
+        TrainingSession = new()
+        {
+            Title = "Training Session",
+            X = Pos.Right(CallForTenders!),
+            Y = Pos.Bottom(Consultants!) + 1,
+            Width = Dim.Fill(),
+            Height = Dim.Percent(30)
+        };
+
+        LeftBody!.Add(TrainingSession);
     }
 
     private void SetupActions()
