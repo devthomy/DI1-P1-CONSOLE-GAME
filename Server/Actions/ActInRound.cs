@@ -88,6 +88,10 @@ public class ActInRound(
             }
         }
 
+        if ()
+        {
+
+        }
         await gameHubService.UpdateCurrentGame(gameId: round.GameId);
 
         return Result.Ok(round);

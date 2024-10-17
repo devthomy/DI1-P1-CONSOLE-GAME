@@ -2,7 +2,7 @@ using Server.Hubs.Records;
 
 namespace Server.Models;
 
-public class Employee(string name, int companyId, int gameId, int salary)
+public class Employee(string name, int companyId, int gameId, int salary, bool leave = false)
 {
     public int? Id { get; private set; }
 
@@ -17,6 +17,8 @@ public class Employee(string name, int companyId, int gameId, int salary)
     public Game Game { get; set; } = null!;
 
     public int CompanyId { get; set; } = companyId;
+
+    public bool leave { get; set;} = false;
 
     public Company Company { get; set; } = null!;
 

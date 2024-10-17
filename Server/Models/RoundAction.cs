@@ -135,3 +135,12 @@ public class GenerateNewConsultantRoundAction(int? gameId) : RoundAction(gameId)
         Payload = (GenerateNewConsultantPayload) payload;
     }
 }
+
+public class SendEmployeeLeave (int? playerId): RoundAction(playerId)
+{
+    public class SendEmployeeLeave : RoundActionPayload
+    {
+        
+    }
+
+}
