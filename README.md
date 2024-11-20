@@ -1,7 +1,7 @@
 # Why So Serious? (WSS)
 
 <!-- COVERAGE_RESULTS_START -->
-![Code Coverage](https://img.shields.io/badge/Code%20Coverage-18%25-yellow?style=flat)
+![Code Coverage](https://img.shields.io/badge/Code%20Coverage-42%25-yellow?style=flat)
 
 Package | Line Rate | Branch Rate | Complexity | Health
 -------- | --------- | ----------- | ---------- | ------
